@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVEVIBE | Wear Your Vibe</title>
+    <link rel="icon" type="image/png" href="avevibelogo.png">
+    <style>
+        /* =========================================
+           CSS VARIABLES & RESET
+        ========================================= */
+        @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #ffffff;
+            --text-main: #111111;
+            --text-light: #555555;
+            --accent: #FF3300; /* Vibrant streetwear orange/red */
+            --border: #e0e0e0;
+            --header-bg: #ffffff;
+            --overlay: rgba(0, 0, 0, 0.6);
+            --nav-height: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Jost', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            /* Removed overflow-x: hidden here as it breaks IntersectionObserver on mobile Safari */
+            line-height: 1.5;
+        }
+
+        #main-content {
+            overflow-x: hidden; /* Safely applied to the wrapper instead */
+            width: 100%;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            outline: none;
+            font-family: inherit;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* =========================================
+           INTRO ANIMATION
+        ========================================= */
+        #intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .intro-text {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: 10px;
+            display: flex;
+        }
+
+        .intro-text span {
+            opacity: 0;
+        }
+
+        /* Fixed Keyframes for Intro */
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .flash-text {
+            animation: textFlash 0.3s ease-in-out;
+        }
+
+        @keyframes textFlash {
+            0% { text-shadow: none; color: #fff; }
+            50% { text-shadow: 0 0 20px var(--accent); color: var(--accent); transform: scale(1.05); }
+            100% { text-shadow: none; color: #fff; transform: scale(1); }
+        }
+
+        .skip-btn {
+            position: absolute;
+            bottom: 40px;
+            color: #666;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #666;
+            transition: color 0.3s, border-color 0.3s;
+        }
+
+        .skip-btn:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+
+        /* =========================================
+           MARQUEES (SCROLLING BARS)
+        ========================================= */
+        .marquee-container {
+            width: 100%;
+            background: var(--text-main);
+            color: white;
+            padding: 8px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 1001;
+        }
+
+        .marquee-container.light {
+            background: var(--bg-color);
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+            border-top: 1px solid var(--border);
+            font-weight: 500;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: scrollMarquee 20s linear infinite;
+        }
+
+        @keyframes scrollMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* =========================================
+           NAVBAR
+        ========================================= */
+        header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
+            transition: all 0.3s ease;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-container img {
+            max-height: 40px;
+            /* Fallback styles if img URL fails */
+            background: #111;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            text-align: center;
+            line-height: 30px;
+            letter-spacing: 2px;
+        }
+
+        nav.desktop-nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav.desktop-nav a {
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            position: relative;
+        }
+
+        nav.desktop-nav a::after {
+            content: '';
+            position: absolute;
+            width: 0%;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--accent);
+            transition: width 0.3s;
+        }
+
+        nav.desktop-nav a:hover::after {
+            width: 100%;
+        }
+
+        .nav-icons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-icons svg {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .nav-icons svg:hover {
+            transform: scale(1.1);
+            stroke: var(--accent);
+        }
+
+        .cart-icon-wrapper {
+            position: relative;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 2px;
+            background: var(--text-main);
+            transition: 0.3s;
+        }
+
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            padding: 5px 10px;
+            border-radius: 0; /* Brutalist/Streetwear style */
+        }
+
+        .search-container input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 0.9rem;
+            width: 150px;
+        }
+
+        /* Mobile Nav */
+        .mobile-menu {
+            position: fixed;
+            top: var(--nav-height);
+            left: -100%;
+            width: 100%;
+            height: calc(100vh - var(--nav-height));
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 5%;
+            gap: 20px;
+            transition: left 0.3s ease;
+            z-index: 999;
+            border-top: 1px solid var(--border);
+        }
+
+        .mobile-menu.active {
+            left: 0;
+        }
+
+        .mobile-menu a {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        /* =========================================
+           HERO SECTION
+        ========================================= */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 80vh;
+            background-color: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Uploaded background for hero */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('Gemini_Generated_Image_itnc44itnc44itnc.jpg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.7;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            font-weight: 300;
+            margin-bottom: 30px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--text-main);
+            color: white;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: 1px solid var(--text-main);
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: white;
+            color: var(--text-main);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn-accent:hover {
+            background: transparent;
+            color: var(--accent);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+            z-index: 1;
+        }
+
+        .scroll-indicator svg {
+            width: 30px;
+            height: 30px;
+            stroke: white;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+            40% { transform: translateY(-15px) translateX(-50%); }
+            60% { transform: translateY(-7px) translateX(-50%); }
+        }
+
+        /* =========================================
+           SECTION STYLES
+        ========================================= */
+        section {
+            padding: 4rem 5%;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* =========================================
+           FEATURED HORIZONTAL SCROLL
+        ========================================= */
+        .featured-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 20px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) var(--border);
+        }
+        
+        .featured-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+        .featured-scroll::-webkit-scrollbar-thumb {
+            background: var(--accent);
+        }
+
+        .featured-card {
+            min-width: 200px;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+        }
+
+        /* =========================================
+           PRODUCT GRID (COMPACT)
+        ========================================= */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .filter-btn {
+            padding: 6px 15px;
+            border: 1px solid var(--border);
+            background: transparent;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--text-main);
+            color: white;
+            border-color: var(--text-main);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .product-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f4f4f4;
+            margin-bottom: 10px;
+        }
+
+        .product-cat {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .product-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+
+        .add-to-cart {
+            width: 100%;
+            padding: 8px;
+            background: var(--text-main);
+            color: white;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            border: 1px solid var(--text-main);
+            transition: all 0.2s;
+            margin-top: auto;
+        }
+
+        .add-to-cart:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* =========================================
+           CUSTOM T-SHIRT SECTION
+        ========================================= */
+        .custom-section {
+            background: #f9f9f9;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .custom-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            align-items: stretch;
+        }
+
+        .custom-box {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .custom-box h3 {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+        }
+
+        .form-group input[type="color"] {
+            padding: 2px;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .shirt-preview-area {
+            width: 100%;
+            height: 250px;
+            background: #eee;
+            margin-top: 1rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Simple shirt shape approximation via borders/radius */
+            border-radius: 20px 20px 5px 5px;
+            border: 2px solid #ddd;
+            transition: background-color 0.3s;
+        }
+
+        .shirt-text-overlay {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        /* =========================================
+           NEW SHIRT DESIGNER CSS
+        ========================================= */
+        .tshirt-preview-wrapper {
+            width: 100%;
+            background: #eee;
+            margin-top: 1rem;
+            padding: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .tshirt-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 1/1.2;
+            margin: 0 auto;
+        }
+        
+        .tshirt-svg {
+            width: 100%;
+            height: 100%;
+            fill: #111111; /* Default shirt color */
+            transition: fill 0.3s;
+            filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.1));
+        }
+        
+        .design-area {
+            position: absolute;
+            border: 1px dashed rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            z-index: 2;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .design-area.active {
+            border: 1px dashed var(--accent);
+            background: rgba(255,51,0,0.05);
+        }
+        
+        .design-area img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+        
+        .design-area span {
+            font-weight: 700;
+            text-align: center;
+            word-wrap: break-word;
+            width: 100%;
+            color: #ffffff; /* Default text color */
+        }
+
+        /* Placement dimensions relative to 100x100 SVG viewbox */
+        .area-front-full { top: 35%; left: 35%; width: 30%; height: 40%; }
+        .area-chest { top: 35%; left: 58%; width: 15%; height: 15%; }
+        .area-left-shoulder { top: 30%; left: 8%; width: 14%; height: 14%; }
+        .area-right-shoulder { top: 30%; right: 8%; width: 14%; height: 14%; }
+        .area-back-full { top: 30%; left: 35%; width: 30%; height: 45%; }
+
+        .view-toggles {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+        
+        .view-btn {
+            padding: 8px 20px;
+            border: 1px solid var(--border);
+            background: #fff;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .view-btn.active {
+            background: var(--text-main);
+            color: white;
+            border-color: var(--text-main);
+        }
+
+        /* =========================================
+           BRAND TEES SECTION (DARK THEME)
+        ========================================= */
+        .brand-section {
+            background: #111;
+            color: white;
+            text-align: center;
+        }
+        
+        .brand-section .section-title {
+            color: white;
+        }
+
+        .brand-banner {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+
+        .brand-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .brand-card {
+            background: #222;
+            border: 1px solid #333;
+            padding: 15px;
+        }
+
+        .brand-card .product-img {
+            filter: grayscale(100%) contrast(1.2);
+            transition: filter 0.3s;
+        }
+
+        .brand-card:hover .product-img {
+            filter: grayscale(0%);
+        }
+
+        .brand-card .product-name { color: white; }
+        .brand-card .add-to-cart { background: white; color: black; border-color: white; }
+        .brand-card .add-to-cart:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        /* =========================================
+           CONTACT & FOOTER
+        ========================================= */
+        .contact-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3rem;
+        }
+
+        .contact-form { flex: 1; min-width: 300px; }
+        .contact-info { flex: 1; min-width: 300px; }
+        
+        .contact-form textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: 1px solid var(--text-main);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .social-btn.whatsapp { background: #25D366; color: white; border-color: #25D366; }
+        .social-btn.ig { background: #E1306C; color: white; border-color: #E1306C; }
+
+        footer {
+            background: #111;
+            color: #fff;
+            padding: 3rem 5% 1rem;
+            font-size: 0.9rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-col h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .footer-col li {
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+
+        .footer-col a:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            border-top: 1px solid #333;
+            padding-top: 1rem;
+            color: #888;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* =========================================
+           SLIDE-IN PANELS (CART, AUTH, ADMIN)
+        ========================================= */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay);
+            z-index: 10000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .sidebar-panel {
+            position: fixed;
+            top: 0; right: -400px;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: var(--bg-color);
+            z-index: 10001;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-panel.active { right: 0; }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 { font-size: 1.5rem; text-transform: uppercase; }
+
+        .close-btn {
+            background: none; border: none; font-size: 1.5rem; cursor: pointer;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Cart specific */
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .cart-item img { width: 70px; height: 90px; object-fit: cover; }
+        .cart-item-details { flex: 1; }
+        .cart-item-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 5px;}
+        .cart-item-price { color: var(--accent); font-weight: 700; margin-bottom: 5px;}
+        
+        .qty-controls {
+            display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); width: fit-content;
+        }
+        .qty-btn { padding: 2px 8px; background: #eee; cursor: pointer;}
+        
+        .cart-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: #f9f9f9;
+        }
+        
+        .cart-total {
+            display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;
+        }
+
+        /* Admin & Auth specific */
+        .modal-form .form-group { margin-bottom: 15px; }
+        .modal-form label { font-size: 0.8rem; }
+        .modal-form input, .modal-form select, .modal-form textarea {
+            width: 100%; padding: 8px; border: 1px solid var(--border);
+        }
+
+        /* =========================================
+           PRODUCT QUICK VIEW MODAL
+        ========================================= */
+        .product-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay);
+            z-index: 10005; display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s; padding: 20px;
+        }
+        .product-modal-overlay.active {
+            display: flex; opacity: 1;
+        }
+        .product-modal {
+            background: var(--bg-color); width: 100%; max-width: 850px;
+            max-height: 90vh; overflow-y: auto; border-radius: 8px;
+            position: relative; display: flex; flex-wrap: wrap;
+            transform: translateY(20px); transition: transform 0.3s;
+        }
+        .product-modal-overlay.active .product-modal { transform: translateY(0); }
+        
+        .close-modal-btn {
+            position: absolute; top: 15px; right: 15px; font-size: 1.5rem;
+            background: #fff; border: 1px solid #ddd; width: 35px; height: 35px;
+            border-radius: 50%; cursor: pointer; z-index: 2; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        .close-modal-btn:hover { background: #eee; }
+        
+        .modal-left { 
+            flex: 1; min-width: 300px; background: #f9f9f9; padding: 30px; 
+            display: flex; flex-direction: column; align-items: center; 
+            border-right: 1px solid var(--border);
+        }
+        .modal-left img { width: 100%; max-width: 350px; height: auto; object-fit: cover; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
+        
+        .modal-thumbnails { display: flex; gap: 15px; margin-top: 25px; }
+        .modal-thumbnails img { 
+            width: 60px; height: 60px; border: 2px solid transparent; 
+            cursor: pointer; background: #fff; transition: border 0.2s;
+        }
+        .modal-thumbnails img.active { border-color: var(--accent); }
+        
+        .modal-right { flex: 1; min-width: 300px; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+        .modal-category { font-size: 0.85rem; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; font-weight: 600; letter-spacing: 1px;}
+        .modal-title { font-size: 2rem; line-height: 1.2; margin-bottom: 15px; }
+        .modal-price { font-size: 1.5rem; font-weight: 700; color: var(--accent); margin-bottom: 25px; }
+        .modal-desc { color: #555; font-size: 1rem; margin-bottom: 30px; line-height: 1.6; }
+        
+        .modal-sizes { margin-bottom: 30px; }
+        .modal-sizes h4 { font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; }
+        .size-options { display: flex; gap: 10px; flex-wrap: wrap; }
+        .size-btn { 
+            width: 45px; height: 45px; border: 1px solid var(--border); 
+            background: #fff; font-weight: 600; font-size: 0.9rem; transition: 0.2s; 
+        }
+        .size-btn:hover { border-color: var(--text-main); }
+        .size-btn.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+
+        /* =========================================
+           UTILITIES & RESPONSIVE
+        ========================================= */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            nav.desktop-nav { display: none; }
+            .search-container { display: none; } /* Hide search on mobile header, maybe put in menu */
+            .hamburger { display: flex; }
+            /* Force exact 2-column layout on mobile instead of auto-fill for better fit */
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .product-img { height: 160px; }
+            .custom-box { min-width: 100%; }
+            section { padding: 3rem 15px; } /* Slightly tighter padding for mobile */
+            .product-modal { flex-direction: column; }
+            .modal-right { padding: 20px; }
+            .modal-title { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- INTRO ANIMATION -->
+    <div id="intro-screen">
+        <h1 class="intro-text" id="intro-text">
+            <span>A</span><span>V</span><span>E</span><span>V</span><span>I</span><span>B</span><span>E</span>
+        </h1>
+        <button class="skip-btn" onclick="skipIntroAnimation()">Skip</button>
+    </div>
+
+    <!-- MAIN WRAPPER -->
+    <div id="main-content" style="display: none;">
+
+        <!-- MARQUEE 1 -->
+        <div class="marquee-container">
+            <div class="marquee-content">
+                Free shipping across India &nbsp;|&nbsp; New drops every week &nbsp;|&nbsp; Limited stock available &nbsp;|&nbsp; Wear Your Vibe &nbsp;|&nbsp; Free shipping across India &nbsp;|&nbsp; New drops every week
+            </div>
+        </div>
+
+        <!-- HEADER / NAVBAR -->
+        <header>
+            <div class="logo-container">
+                <a href="#home">
+                    <!-- using provided link as src. It's a web link so it will likely show alt text styling -->
+                    <img src="avevibelogo.png" alt="AVEVIBE" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display: none; font-weight: 800; font-size: 1.4rem; letter-spacing: 2px;">AVEVIBE</div>
+                </a>
+            </div>
+
+            <nav class="desktop-nav">
+                <a href="#home">Home</a>
+                <a href="#shop">Shop</a>
+                <a href="#custom">Custom</a>
+                <a href="#brand">Brand Tees</a>
+                <a href="#contact">Contact</a>
+            </nav>
+
+            <div class="nav-icons">
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Search vibe...">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                
+                <div class="user-icon" onclick="toggleSidebar('auth-sidebar')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                
+                <div class="cart-icon-wrapper" onclick="toggleSidebar('cart-sidebar')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <span class="cart-count" id="cart-count-badge">0</span>
+                </div>
+
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MOBILE MENU -->
+        <div class="mobile-menu" id="mobile-menu">
+            <input type="text" id="mobile-search" placeholder="Search products..." style="padding: 10px; border: 1px solid #ccc; font-size: 1rem;">
+            <a href="#home" onclick="toggleMobileMenu()">Home</a>
+            <a href="#shop" onclick="toggleMobileMenu()">Shop</a>
+            <a href="#custom" onclick="toggleMobileMenu()">Custom T-Shirts</a>
+            <a href="#brand" onclick="toggleMobileMenu()">Brand Tees</a>
+            <a href="#contact" onclick="toggleMobileMenu()">Contact</a>
+        </div>
+
+        <!-- HERO SECTION -->
+        <section class="hero" id="home">
+            <div class="hero-content fade-in">
+                <h1>Wear Your Vibe</h1>
+                <p>Affordable, aesthetic, and stylish clothing crafted exclusively for the Indian youth.</p>
+                <div class="hero-buttons">
+                    <a href="#custom" class="btn btn-accent">Customize Your Tee</a>
+                    <a href="#brand" class="btn">Get Premium Tees</a>
+                    <a href="#shop" class="btn">Shop All Categories</a>
+                </div>
+            </div>
+            <div class="scroll-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+        </section>
+
+        <!-- MARQUEE 2 -->
+        <div class="marquee-container light">
+            <div class="marquee-content" style="animation-duration: 25s; animation-direction: reverse;">
+                Jerseys &nbsp;•&nbsp; Street Wear &nbsp;•&nbsp; Gym Wear &nbsp;•&nbsp; Premium Tees &nbsp;•&nbsp; Get Your Customized T-Shirt &nbsp;•&nbsp; Jerseys &nbsp;•&nbsp; Street Wear &nbsp;•&nbsp; Gym Wear
+            </div>
+        </div>
+
+        <!-- FEATURED / TRENDING (Horizontal Scroll) -->
+        <section class="fade-in">
+            <h2 class="section-title">Trending Now</h2>
+            <div class="featured-scroll" id="featured-container">
+                <!-- JS will inject 10 items here -->
+            </div>
+        </section>
+
+        <!-- MAIN SHOP SECTION -->
+        <section id="shop" class="fade-in">
+            <h2 class="section-title">All Drops</h2>
+            
+            <div class="filters" id="category-filters">
+                <button class="filter-btn" data-cat="Jerseys">Jerseys</button>
+                <button class="filter-btn active" data-cat="Street Wear">Street Wear</button>
+                <button class="filter-btn" data-cat="Gym Wear">Gym Wear</button>
+                <button class="filter-btn" data-cat="Premium Tees">Premium Tees</button>
+                <button class="filter-btn" data-cat="All">All</button>
+            </div>
+
+            <div class="product-grid" id="main-product-grid">
+                <!-- JS will inject 50 items here based on filters -->
+            </div>
+        </section>
+
+        <!-- CUSTOM T-SHIRT SECTION -->
+        <section id="custom" class="custom-section fade-in">
+            <h2 class="section-title">Get Your Customized T-Shirt</h2>
+            <div class="custom-container">
+                
+                <!-- Option 1: Simulator -->
+                <div class="custom-box">
+                    <h3>Design Online</h3>
+                    <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Create a detailed mockup. Add text or images to different areas.</p>
+                    
+                    <div class="form-group">
+                        <label>Placement Area</label>
+                        <select id="design-placement" onchange="updateActiveArea()" style="padding: 10px; width: 100%; font-family: inherit; border: 1px solid var(--border);">
+                            <option value="area-front-full">Front - Full Center</option>
+                            <option value="area-chest">Front - Chest (Left)</option>
+                            <option value="area-left-shoulder">Front - Left Sleeve</option>
+                            <option value="area-right-shoulder">Front - Right Sleeve</option>
+                            <option value="area-back-full">Back - Full Center</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>T-Shirt Color</label>
+                            <input type="color" id="custom-color" value="#111111">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Text Color</label>
+                            <input type="color" id="custom-text-color" value="#ffffff">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Add Text</label>
+                        <input type="text" id="custom-text" placeholder="Type your vibe..." maxlength="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Upload Logo/Graphic</label>
+                        <input type="file" id="custom-image-upload" accept="image/*" style="padding: 5px; cursor: pointer;">
+                    </div>
+
+                    <div class="view-toggles" style="margin-top: 1.5rem;">
+                        <button class="view-btn active" id="btn-view-front" onclick="switchView('front')">Front View</button>
+                        <button class="view-btn" id="btn-view-back" onclick="switchView('back')">Back View</button>
+                    </div>
+                    
+                    <div class="tshirt-preview-wrapper" id="pdf-print-area">
+                        <div id="tshirt-front-view" class="tshirt-wrapper">
+                            <svg class="tshirt-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                                <path d="M35,20 C40,30 60,30 65,20 L85,25 L95,45 L80,55 L75,40 L75,95 L25,95 L25,40 L20,55 L5,45 L15,25 Z" />
+                            </svg>
+                            <div id="area-front-full" class="design-area area-front-full active"><span></span><img src=""></div>
+                            <div id="area-chest" class="design-area area-chest"><span></span><img src=""></div>
+                            <div id="area-left-shoulder" class="design-area area-left-shoulder"><span></span><img src=""></div>
+                            <div id="area-right-shoulder" class="design-area area-right-shoulder"><span></span><img src=""></div>
+                        </div>
+                        
+                        <div id="tshirt-back-view" class="tshirt-wrapper" style="display: none;">
+                            <svg class="tshirt-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                                <!-- Back neck is slightly higher -->
+                                <path d="M35,20 C40,23 60,23 65,20 L85,25 L95,45 L80,55 L75,40 L75,95 L25,95 L25,40 L20,55 L5,45 L15,25 Z" />
+                            </svg>
+                            <div id="area-back-full" class="design-area area-back-full"><span></span><img src=""></div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn" style="flex: 1; background: #333; color: white;" onclick="downloadPDF()">Download PDF</button>
+                        <button class="btn btn-accent" style="flex: 1;" onclick="alert('Design saved! Contact us on WhatsApp with your PDF.')">Save Order</button>
+                    </div>
+                </div>
+
+                <!-- Option 2: Contact -->
+                <div class="custom-box" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                    <h3>Pro Custom Design</h3>
+                    <p style="margin-bottom: 20px;">Want complex graphics, logos, or bulk orders for your college fest? Connect directly with our design team.</p>
+                    <a href="#" class="social-btn whatsapp" style="width: 100%; justify-content: center;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                        Get Designed via WhatsApp
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- BRAND TEES (EXCLUSIVE) SECTION -->
+        <section id="brand" class="brand-section fade-in">
+            <h2 class="section-title">Premium Collection</h2>
+            <p class="brand-banner">Represent the movement. Premium materials, exclusive cuts, raw aesthetics.</p>
+            <div class="brand-grid" id="brand-grid-container">
+                <!-- JS injects Brand Tees here -->
+            </div>
+        </section>
+
+        <!-- CONTACT SECTION -->
+        <section id="contact" class="fade-in">
+            <h2 class="section-title">Hit Us Up</h2>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <h3>Contact Info</h3>
+                    <p style="margin-bottom: 15px;">Got questions about sizing, orders, or just want to talk streetwear? Reach out.</p>
+                    <p><strong>Email:</strong> support@avevibe.in</p>
+                    <p><strong>Location:</strong> Mumbai, India</p>
+                    
+                    <div class="social-links">
+                        <a href="#" class="social-btn ig">
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                            Instagram
+                        </a>
+                        <a href="#" class="social-btn whatsapp">
+                             <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                            WhatsApp
+                        </a>
+                    </div>
+                </div>
+                
+                <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent! We will reply soon.'); this.reset();">
+                    <div class="form-group">
+                        <input type="text" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" placeholder="Your Email" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea placeholder="Your Message / Vibe..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-accent" style="width: 100%;">Send Message</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer>
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4 style="font-size: 1.5rem; letter-spacing: 2px;">AVEVIBE</h4>
+                    <p>Wear Your Vibe.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Shop</h4>
+                    <ul>
+                        <li><a href="#shop">All Products</a></li>
+                        <li><a href="#brand">Brand Tees</a></li>
+                        <li><a href="#custom">Custom Shirts</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Size Guide</a></li>
+                        <li><a href="#">Shipping & Returns</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 AVEVIBE. Made for Indian Youth.</p>
+            </div>
+        </footer>
+
+    </div> <!-- End Main Content -->
+
+    <!-- =========================================
+         SIDEBARS & MODALS
+    ========================================= -->
+    <div class="sidebar-overlay" id="overlay" onclick="closeAllSidebars()"></div>
+
+    <!-- CART SIDEBAR -->
+    <div class="sidebar-panel" id="cart-sidebar">
+        <div class="sidebar-header">
+            <h2>Your Cart</h2>
+            <button class="close-btn" onclick="toggleSidebar('cart-sidebar')">&times;</button>
+        </div>
+        <div class="sidebar-content" id="cart-items-container">
+            <!-- Cart items injected via JS -->
+            <p style="text-align: center; color: #888; margin-top: 20px;">Cart is empty.</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-amt">₹0</span>
+            </div>
+            <button class="btn btn-accent" style="width: 100%;" onclick="checkout()">Checkout</button>
+        </div>
+    </div>
+
+    <!-- AUTH SIDEBAR (Simulated) -->
+    <div class="sidebar-panel" id="auth-sidebar">
+        <div class="sidebar-header">
+            <h2 id="auth-title">Login</h2>
+            <button class="close-btn" onclick="toggleSidebar('auth-sidebar')">&times;</button>
+        </div>
+        <div class="sidebar-content" id="auth-content">
+            <div id="login-view">
+                <form class="modal-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="login-email" required value="user@avevibe.in">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" required value="password123">
+                    </div>
+                    <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 10px;">Login</button>
+                </form>
+                <p style="margin-top: 20px; font-size: 0.85rem; text-align: center;">New here? <a href="#" style="color: var(--accent); font-weight: bold;">Sign Up</a></p>
+            </div>
+            <div id="profile-view" style="display: none; text-align: center;">
+                <div style="width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">👤</div>
+                <h3 id="user-name-display" style="margin-bottom: 5px;">User</h3>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Vibe Member</p>
+                <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="alert('Order history feature coming soon!')">Order History</button>
+                <button class="btn" style="width: 100%; background: #eee; border-color: #ddd; color: #333;" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCT QUICK VIEW MODAL -->
+    <div class="product-modal-overlay" id="product-modal-overlay" onclick="closeProductModal(event)">
+        <div class="product-modal" onclick="event.stopPropagation()">
+            <button class="close-modal-btn" onclick="closeProductModal()">&times;</button>
+            
+            <div class="modal-left">
+                <img src="" alt="Product" id="modal-main-img">
+                <div class="modal-thumbnails" id="modal-thumbnails">
+                    <!-- Thumbs injected via JS -->
+                </div>
+            </div>
+            
+            <div class="modal-right">
+                <div class="modal-category" id="modal-cat"></div>
+                <h2 class="modal-title" id="modal-title"></h2>
+                <div class="modal-price" id="modal-price"></div>
+                <p class="modal-desc" id="modal-desc"></p>
+
+                <div class="modal-sizes">
+                    <h4>Select Size</h4>
+                    <div class="size-options" id="size-options">
+                        <button class="size-btn" onclick="selectSize('S', event)">S</button>
+                        <button class="size-btn" onclick="selectSize('M', event)">M</button>
+                        <button class="size-btn active" onclick="selectSize('L', event)">L</button>
+                        <button class="size-btn" onclick="selectSize('XL', event)">XL</button>
+                        <button class="size-btn" onclick="selectSize('XXL', event)">XXL</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-accent" style="width: 100%; padding: 15px; font-size: 1.1rem;" onclick="addCurrentToCart()">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         JAVASCRIPT
+    ========================================= -->
+    <script>
+        let isAppStarted = false;
+
+        function skipIntroAnimation() {
+            if (isAppStarted) return;
+            isAppStarted = true;
+            
+            const introScreen = document.getElementById('intro-screen');
+            if (introScreen) introScreen.style.display = 'none';
+            
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) mainContent.style.display = 'block';
+            
+            initApp();
+        }
+
+        // --- Intro Animation Logic ---
+        function startIntroAnimation() {
+            try {
+                const introTextSpans = document.querySelectorAll('.intro-text span');
+                
+                // 1. Letter by letter fade in
+                introTextSpans.forEach((span, index) => {
+                    span.style.animation = `fadeIn 0.1s forwards`;
+                    span.style.animationDelay = `${index * 0.2}s`;
+                });
+
+                // 2. Flash full word
+                setTimeout(() => {
+                    const introText = document.getElementById('intro-text');
+                    if (introText) introText.classList.add('flash-text');
+                }, 1800);
+
+                // 3. Fade out and show main content
+                setTimeout(() => {
+                    if(!isAppStarted) skipIntroAnimation();
+                }, 3000);
+
+            } catch(e) {
+                console.error("Animation blocked by environment, skipping...", e);
+                skipIntroAnimation(); // Failsafe
+            }
+        }
+
+        // Safely start animation immediately since script is at end of body
+        startIntroAnimation();
+
+        // --- Core App Data & State ---
+        let products = [];
+        let cart = [];
+        let currentUser = null;
+        let currentModalProductId = null;
+        let currentSelectedSize = 'L';
+
+        // Base names for random generation (50 items) - Updated Categories
+        const categoriesData = {
+            "Jerseys": ["Man United Home", "Real Madrid Away", "Arsenal Third", "Barcelona Home", "India Retro 2011", "CSK Home", "MI Away", "RCB Classic", "Brazil Classic", "Argentina Home"],
+            "Street Wear": ["Naruto Sage Oversized", "Goku Ultra Drop", "Urban Boxy Fit", "Vintage Acid Wash", "Heavyweight Blank", "Demon Slayer Graphic", "Jujutsu Kaisen Tee", "Street Essential"],
+            "Gym Wear": ["Active Compression", "Dry-Fit Tank", "Squat Club Tee", "Pump Cover", "Flex Stringer", "Core T-Shirt", "Endurance Top", "Power Tee"],
+            "Premium Tees": ["AVEVIBE Classic", "AVEVIBE Box Logo", "VIBE Essential", "AVEVIBE Script", "Vibe Check Tee", "AVEVIBE Minimal", "AVEVIBE Tour", "AVEVIBE Varsity"]
+        };
+
+        // --- Helper: Generate SVG Image Placeholder locally ---
+        // This avoids external HTTP requests and ensures fast loading & no broken links.
+        function generateSVG(text, category) {
+            // Colors mapping for categories
+            const colors = {
+                "Jerseys": "0077b6", // Blue
+                "Street Wear": "2a9d8f", // Teal
+                "Gym Wear": "f4a261", // Orange
+                "Premium Tees": "111111"  // Black
+            };
+            const bg = colors[category] || "333333";
+            const shortText = text.length > 15 ? text.substring(0, 12) + "..." : text;
+            
+            // Using URL Encoded double quotes (%22) instead of single quotes to prevent any JS syntax issues
+            return `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22400%22 style=%22background:%23${bg}%22%3E%3Ctext fill=%22%23ffffff%22 x=%2250%25%22 y=%2250%25%22 font-family=%22sans-serif%22 font-size=%2222%22 font-weight=%22bold%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E${encodeURIComponent(shortText)}%3C/text%3E%3C/svg%3E`;
+        }
+
+        // --- Initialization ---
+        function initApp() {
+            generateInitialProducts();
+            loadLocalStorage();
+            renderProducts('Street Wear'); // Changed default view to Street Wear
+            renderFeatured();
+            renderBrandTees();
+            setupScrollAnimations();
+        }
+
+        function generateInitialProducts() {
+            // Safely check if products exist in LS (from Admin)
+            let savedProducts = null;
+            try {
+                savedProducts = localStorage.getItem('avevibe_products_v2');
+            } catch(e) {
+                console.warn("Local storage blocked (Private mode?), loading defaults.");
+            }
+
+            if (savedProducts) {
+                try {
+                    products = JSON.parse(savedProducts);
+                } catch(e) {
+                    console.error("Products load error", e);
+                }
+            } 
+            
+            if (products.length === 0) {
+                // Generate 50 items
+                let idCounter = 1;
+                for (const [cat, names] of Object.entries(categoriesData)) {
+                    names.forEach(name => {
+                        // Base prices depending on cat
+                        let price = Math.floor(Math.random() * 500) + 499; // 499 to 999
+                        if(cat === "Jerseys") price += 300;
+                        if(cat === "Premium Tees") price += 200;
+
+                        products.push({
+                            id: idCounter++,
+                            name: name,
+                            category: cat,
+                            price: price,
+                            image: generateSVG(name, cat)
+                        });
+                    });
+                }
+                // Fill up to 50 if needed by duplicating with "V2"
+                let keys = Object.keys(categoriesData);
+                while(products.length < 50) {
+                    let randomCat = keys[Math.floor(Math.random() * keys.length)];
+                    let randomName = categoriesData[randomCat][Math.floor(Math.random() * categoriesData[randomCat].length)] + " V2";
+                    products.push({
+                        id: idCounter++,
+                        name: randomName,
+                        category: randomCat,
+                        price: Math.floor(Math.random() * 500) + 599,
+                        image: generateSVG(randomName, randomCat)
+                    });
+                }
+                // Save default set to LS safely
+                try {
+                    localStorage.setItem('avevibe_products_v2', JSON.stringify(products));
+                } catch(e) {
+                    console.warn("Could not save to local storage.");
+                }
+            }
+        }
+
+        function loadLocalStorage() {
+            try {
+                const savedCart = localStorage.getItem('avevibe_cart');
+                if (savedCart) {
+                    cart = JSON.parse(savedCart);
+                    updateCartUI();
+                }
+            } catch(e) {
+                console.error("Cart load error", e);
+                cart = [];
+            }
+            
+            try {
+                const savedUser = localStorage.getItem('avevibe_user');
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    updateAuthUI();
+                }
+            } catch(e) {
+                console.error("User load error", e);
+                currentUser = null;
+            }
+        }
+
+        // --- Rendering Logic ---
+        function createProductCardHTML(p) {
+            // Escape possible quotes in name to not break HTML layout
+            const safeName = p.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            
+            // Check admin status for logic
+            const status = p.status || "In Stock";
+            let badgeHtml = '';
+            let btnHtml = `<button class="add-to-cart" onclick="event.stopPropagation(); openProductModal(${p.id})">Select Size</button>`;
+            let imgStyle = 'loading="lazy"';
+            
+            if (status === "Limited") {
+                badgeHtml = `<div style="position: absolute; top: 10px; left: 10px; background: var(--accent); color: white; font-size: 0.7rem; font-weight: bold; padding: 2px 8px; z-index: 2; text-transform: uppercase;">LIMITED</div>`;
+            } else if (status === "Out of Stock") {
+                badgeHtml = `<div style="position: absolute; top: 10px; left: 10px; background: #111; color: white; font-size: 0.7rem; font-weight: bold; padding: 2px 8px; z-index: 2; text-transform: uppercase;">OUT OF STOCK</div>`;
+                imgStyle = `loading="lazy" style="filter: grayscale(100%); opacity: 0.6;"`;
+                btnHtml = `<button class="add-to-cart" disabled style="background: #ccc; border-color: #ccc; color: #666; cursor: not-allowed;" onclick="event.stopPropagation();">Out of Stock</button>`;
+            }
+
+            return `
+                <div class="product-card" onclick="${status === 'Out of Stock' ? '' : `openProductModal(${p.id})`}" style="cursor: pointer; position: relative;">
+                    ${badgeHtml}
+                    <img src="${p.image}" alt="${safeName}" class="product-img" ${imgStyle}>
+                    <div class="product-cat">${p.category}</div>
+                    <div class="product-name" title="${safeName}">${p.name}</div>
+                    <div class="product-price">₹${p.price}</div>
+                    ${btnHtml}
+                </div>
+            `;
+        }
+
+        function renderProducts(filterStr, searchStr = "") {
+            const grid = document.getElementById('main-product-grid');
+            grid.innerHTML = '';
+            
+            let filtered = products;
+
+            // Apply category filter
+            if (filterStr !== 'All') {
+                filtered = filtered.filter(p => p.category === filterStr);
+            }
+
+            // Apply search string
+            if (searchStr.trim() !== "") {
+                const s = searchStr.toLowerCase();
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(s) || p.category.toLowerCase().includes(s));
+            }
+
+            if(filtered.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 20px;">No products found for this vibe.</p>';
+                return;
+            }
+
+            filtered.forEach(p => {
+                grid.innerHTML += createProductCardHTML(p);
+            });
+        }
+
+        function renderFeatured() {
+            const container = document.getElementById('featured-container');
+            // Pick 10 random products for featured
+            let shuffled = [...products].sort(() => 0.5 - Math.random());
+            let selected = shuffled.slice(0, 10);
+            
+            selected.forEach(p => {
+                container.innerHTML += `
+                    <div class="featured-card">
+                        ${createProductCardHTML(p)}
+                    </div>
+                `;
+            });
+        }
+
+        function renderBrandTees() {
+            const container = document.getElementById('brand-grid-container');
+            const brandProducts = products.filter(p => p.category === "Premium Tees").slice(0, 4);
+            brandProducts.forEach(p => {
+                container.innerHTML += createProductCardHTML(p).replace('product-card', 'brand-card product-card');
+            });
+        }
+
+        // --- Filter & Search Event Listeners ---
+        document.getElementById('category-filters').addEventListener('click', (e) => {
+            if(e.target.classList.contains('filter-btn')) {
+                // Update active class
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Render
+                const cat = e.target.getAttribute('data-cat');
+                // Clear search if using cat buttons
+                document.getElementById('search-input').value = "";
+                document.getElementById('mobile-search').value = "";
+                renderProducts(cat);
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            renderProducts('All', e.target.value);
+            // reset cat filters
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-btn[data-cat="All"]').classList.add('active');
+        });
+
+        document.getElementById('mobile-search').addEventListener('input', (e) => {
+            renderProducts('All', e.target.value);
+        });
+
+        // --- Product Modal Logic ---
+        function selectSize(size, event) {
+            currentSelectedSize = size;
+            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function openProductModal(id) {
+            const p = products.find(prod => prod.id === id);
+            if(!p) return;
+            
+            currentModalProductId = p.id;
+            currentSelectedSize = 'L'; // reset to default
+            
+            let statusBadge = '';
+            if (p.status === 'Limited') {
+                statusBadge = '<span style="color: var(--accent); font-weight: bold; font-size: 0.8rem; margin-left: 10px;">(LIMITED STOCK)</span>';
+            }
+            
+            document.getElementById('modal-main-img').src = p.image;
+            document.getElementById('modal-main-img').style.filter = "none";
+            document.getElementById('modal-cat').innerHTML = p.category + statusBadge;
+            document.getElementById('modal-title').innerText = p.name;
+            document.getElementById('modal-price').innerText = '₹' + p.price;
+            
+            // Mock robust description
+            const desc = p.description || "An exclusive streetwear drop featuring premium fabric, a modern fit, and a bold aesthetic. Crafted for maximum comfort and durability to keep your vibe right all day long.";
+            document.getElementById('modal-desc').innerText = desc;
+            
+            // Reset size UI
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.innerText === 'L') btn.classList.add('active');
+            });
+
+            // Robust thumbnail generation preventing quote interpolation bugs
+            const thumbsContainer = document.getElementById('modal-thumbnails');
+            thumbsContainer.innerHTML = ''; // clear existing
+            
+            const filters = ['none', 'brightness(0.85)', 'contrast(1.2) saturate(1.1)'];
+            filters.forEach((filterValue, index) => {
+                const imgEl = document.createElement('img');
+                imgEl.src = p.image;
+                if (filterValue !== 'none') {
+                    imgEl.style.filter = filterValue;
+                }
+                if (index === 0) {
+                    imgEl.classList.add('active');
+                }
+                imgEl.onclick = function() {
+                    changeModalImage(this, p.image, filterValue);
+                };
+                thumbsContainer.appendChild(imgEl);
+            });
+
+            document.getElementById('product-modal-overlay').classList.add('active');
+        }
+
+        function changeModalImage(el, src, filter) {
+            document.getElementById('modal-main-img').src = src;
+            document.getElementById('modal-main-img').style.filter = filter;
+            document.querySelectorAll('.modal-thumbnails img').forEach(img => img.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function closeProductModal(e) {
+            if(e && e.target.id !== 'product-modal-overlay') return;
+            document.getElementById('product-modal-overlay').classList.remove('active');
+        }
+
+        // --- Cart Logic ---
+        function addCurrentToCart() {
+            if(!currentModalProductId) return;
+            const product = products.find(p => p.id === currentModalProductId);
+            
+            // Find existing item mapping both ID and selected SIZE
+            const existingItem = cart.find(item => item.id === product.id && item.size === currentSelectedSize);
+            if(existingItem) {
+                existingItem.qty += 1;
+            } else {
+                cart.push({ ...product, qty: 1, size: currentSelectedSize });
+            }
+
+            saveCart();
+            updateCartUI();
+            
+            closeProductModal();
+            toggleSidebar('cart-sidebar', true);
+        }
+
+        function updateQty(index, change) {
+            if(cart[index]) {
+                cart[index].qty += change;
+                if(cart[index].qty <= 0) {
+                    cart.splice(index, 1);
+                }
+                saveCart();
+                updateCartUI();
+            }
+        }
+
+        function saveCart() {
+            localStorage.setItem('avevibe_cart', JSON.stringify(cart));
+        }
+
+        function updateCartUI() {
+            // Update badge count
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cart-count-badge').innerText = count;
+
+            // Render Sidebar
+            const container = document.getElementById('cart-items-container');
+            if(cart.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">Your cart is empty.</p>';
+                document.getElementById('cart-total-amt').innerText = '₹0';
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+            cart.forEach((item, index) => {
+                total += item.price * item.qty;
+                let displaySize = item.size ? ` - ${item.size}` : '';
+                html += `
+                    <div class="cart-item">
+                        <img src="${item.image}" alt="${item.name.replace(/"/g, '&quot;')}">
+                        <div class="cart-item-details">
+                            <div class="cart-item-title">${item.name}${displaySize}</div>
+                            <div class="cart-item-price">₹${item.price}</div>
+                            <div class="qty-controls">
+                                <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+                                <span>${item.qty}</span>
+                                <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            document.getElementById('cart-total-amt').innerText = `₹${total}`;
+        }
+
+        function checkout() {
+            if(cart.length === 0) {
+                alert("Add items to your cart first!");
+                return;
+            }
+            if(!currentUser) {
+                alert("Please login to checkout.");
+                toggleSidebar('cart-sidebar', false);
+                toggleSidebar('auth-sidebar', true);
+                return;
+            }
+            
+            // Collect User Shipping Details
+            const name = prompt("Enter Full Name:");
+            if(!name) return; // Cancelled
+            const phone = prompt("Enter Phone Number:");
+            const address = prompt("Enter Delivery Address (House No, Street, Area):");
+            const city = prompt("Enter City & State:");
+            const pin = prompt("Enter Pincode:");
+            
+            const paymode = confirm("Click OK for PREPAID, or Cancel for CASH ON DELIVERY") ? "PREPAID" : "COD";
+            const totalAmt = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            // Generate Order Object
+            const rnd = Math.floor(Math.random() * 9000) + 1000;
+            const today = new Date();
+            const dateStr = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
+            
+            const newOrder = {
+                id: 'AVE-' + rnd,
+                date: dateStr,
+                name: name,
+                phone: phone,
+                address: address,
+                city: city,
+                pin: pin,
+                paymode: paymode,
+                amount: paymode === 'COD' ? totalAmt : 0,
+                cart: [...cart]
+            };
+
+            // Save to Database
+            let orders = JSON.parse(localStorage.getItem('avevibe_orders') || '[]');
+            orders.push(newOrder);
+            localStorage.setItem('avevibe_orders', JSON.stringify(orders));
+
+            alert(`Order placed successfully! Your Order ID is ${newOrder.id}. Vibe check passed.`);
+            cart = [];
+            saveCart();
+            updateCartUI();
+            toggleSidebar('cart-sidebar', false);
+        }
+
+        // --- Auth Logic (Simulated) ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            currentUser = { email: email, name: email.split('@')[0] };
+            localStorage.setItem('avevibe_user', JSON.stringify(currentUser));
+            updateAuthUI();
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('avevibe_user');
+            updateAuthUI();
+        }
+
+        function updateAuthUI() {
+            const loginView = document.getElementById('login-view');
+            const profileView = document.getElementById('profile-view');
+            const title = document.getElementById('auth-title');
+
+            if(currentUser) {
+                loginView.style.display = 'none';
+                profileView.style.display = 'block';
+                title.innerText = 'Profile';
+                document.getElementById('user-name-display').innerText = currentUser.name.toUpperCase();
+            } else {
+                loginView.style.display = 'block';
+                profileView.style.display = 'none';
+                title.innerText = 'Login';
+            }
+        }
+
+        // --- Custom T-Shirt Simulator (Advanced) ---
+        const customColorInp = document.getElementById('custom-color');
+        const customTextInp = document.getElementById('custom-text');
+        const customTextColorInp = document.getElementById('custom-text-color');
+        const placementSelect = document.getElementById('design-placement');
+        const imageUpload = document.getElementById('custom-image-upload');
+        
+        // Update SVG Shirt Color
+        customColorInp.addEventListener('input', (e) => {
+            document.querySelectorAll('.tshirt-svg').forEach(svg => {
+                svg.style.fill = e.target.value;
+            });
+        });
+
+        // Update Active Area Content
+        function updateActiveContent() {
+            const activeId = placementSelect.value;
+            const activeArea = document.getElementById(activeId);
+            const span = activeArea.querySelector('span');
+            
+            span.innerText = customTextInp.value;
+            span.style.color = customTextColorInp.value;
+        }
+
+        customTextInp.addEventListener('input', updateActiveContent);
+        customTextColorInp.addEventListener('input', updateActiveContent);
+
+        // Handle Image Upload to specific area
+        imageUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const activeId = placementSelect.value;
+                    const activeArea = document.getElementById(activeId);
+                    const img = activeArea.querySelector('img');
+                    img.src = event.target.result;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Switch Active Area Borders
+        function updateActiveArea() {
+            document.querySelectorAll('.design-area').forEach(area => area.classList.remove('active'));
+            const activeId = placementSelect.value;
+            document.getElementById(activeId).classList.add('active');
+            
+            // Auto switch visual view based on placement selected
+            if(activeId === 'area-back-full') {
+                switchView('back');
+            } else {
+                switchView('front');
+            }
+
+            // Sync inputs with active area text
+            const activeArea = document.getElementById(activeId);
+            customTextInp.value = activeArea.querySelector('span').innerText;
+        }
+
+        // Switch Front/Back Visual View
+        function switchView(view) {
+            document.getElementById('tshirt-front-view').style.display = view === 'front' ? 'block' : 'none';
+            document.getElementById('tshirt-back-view').style.display = view === 'back' ? 'block' : 'none';
+            
+            document.getElementById('btn-view-front').classList.toggle('active', view === 'front');
+            document.getElementById('btn-view-back').classList.toggle('active', view === 'back');
+        }
+
+        // Generate PDF using Native Print Feature (Zero dependencies)
+        function downloadPDF() {
+            // Temporarily hide UI dashed borders for a clean print
+            document.querySelectorAll('.design-area').forEach(area => area.style.border = 'none');
+            
+            const printContent = document.getElementById('pdf-print-area').innerHTML;
+            const printWindow = window.open('', '', 'height=800,width=1000');
+            
+            // Use safe string escapes to prevent Live Server from injecting 
+            // inside our template strings and causing "Unexpected end of input"
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>AVEVIBE Custom Design</title>
+                    \x3Cstyle>
+                        body { font-family: sans-serif; text-align: center; padding: 20px; background: white; margin: 0; }
+                        h2 { margin-bottom: 5px; text-transform: uppercase; font-size: 2rem; }
+                        p { color: #666; margin-bottom: 40px; }
+                        .print-container { display: flex; justify-content: center; gap: 50px; flex-wrap: wrap; }
+                        .tshirt-wrapper { position: relative; width: 350px; aspect-ratio: 1/1.2; margin-bottom: 20px; }
+                        .tshirt-wrapper::after { content: 'Front View'; position: absolute; bottom: -30px; left: 0; width: 100%; text-align: center; font-weight: bold; }
+                        #tshirt-back-view::after { content: 'Back View'; }
+                        .tshirt-svg { width: 100%; height: 100%; filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.1)); fill: ${customColorInp.value}; }
+                        .design-area { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+                        .design-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
+                        .design-area span { font-weight: bold; text-align: center; word-wrap: break-word; width: 100%; }
+                        
+                        /* Placements mapped identically */
+                        .area-front-full { top: 35%; left: 35%; width: 30%; height: 40%; }
+                        .area-chest { top: 35%; left: 58%; width: 15%; height: 15%; }
+                        .area-left-shoulder { top: 30%; left: 8%; width: 14%; height: 14%; }
+                        .area-right-shoulder { top: 30%; right: 8%; width: 14%; height: 14%; }
+                        .area-back-full { top: 30%; left: 35%; width: 30%; height: 45%; }
+                        
+                        @media print {
+                            @page { size: landscape; margin: 0; }
+                            body { margin: 1cm; }
+                        }
+                    \x3C/style>
+                \x3C/head>
+                <body>
+                    <h2>AVEVIBE Customized Order</h2>
+                    <p>Save this page as PDF and share it with us on WhatsApp to process your order.</p>
+                    <div class="print-container">
+                        ${printContent}
+                    </div>
+                    \x3Cscript>
+                        // Force both views to show side-by-side in print
+                        document.getElementById('tshirt-front-view').style.display = 'block';
+                        document.getElementById('tshirt-back-view').style.display = 'block';
+                        
+                        // Wait a fraction of a second to ensure DOM/Images render
+                        setTimeout(() => {
+                            window.print();
+                            window.close();
+                        }, 500);
+                    \x3C/script>
+                \x3C/body>
+                \x3C/html>
+            `);
+            printWindow.document.close();
+            
+            // Restore borders in UI after spawning print dialog
+            setTimeout(() => {
+                updateActiveArea(); 
+            }, 500);
+        }
+
+        // --- UI & Interactions ---
+        function toggleSidebar(id, forceState = null) {
+            const sidebar = document.getElementById(id);
+            const overlay = document.getElementById('overlay');
+            
+            // If forcing state open
+            if(forceState === true) {
+                closeAllSidebars();
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+                return;
+            }
+            // If forcing state close
+            if(forceState === false) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                return;
+            }
+            
+            // Toggle
+            if (sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                closeAllSidebars();
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            }
+        }
+
+        function closeAllSidebars() {
+            document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('active');
+        }
+
+        // Scroll animations (Intersection Observer)
+        function setupScrollAnimations() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target); // Stop observing after it appears to save mobile resources
+                    }
+                });
+            }, { threshold: 0, rootMargin: "0px 0px -50px 0px" }); // Fixed threshold so it triggers instantly on mobile
+
+            document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+        }
+
+    </script>
+</body>
+</html>

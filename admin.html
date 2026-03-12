@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVEVIBE | Admin Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #f4f4f4;
+            --text-main: #111111;
+            --accent: #FF3300;
+            --border: #e0e0e0;
+            --sidebar-width: 250px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Jost', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* =========================================================
+           LOGIN OVERLAY
+        ========================================================= */
+        #admin-login-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #111; z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; transition: opacity 0.3s;
+        }
+        .login-box {
+            background: #222; padding: 40px; border-radius: 8px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333;
+        }
+        .login-box input {
+            padding: 12px; margin-bottom: 15px; width: 100%; text-align: center;
+            font-size: 1rem; border-radius: 4px; border: 1px solid #444; background: #111; color: white;
+        }
+        .login-box button {
+            padding: 12px; width: 100%; background: var(--accent); color: white;
+            border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 1rem;
+        }
+        .login-box button:hover { background: #e62e00; }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width); background: #111; color: white;
+            display: flex; flex-direction: column; padding: 20px 0;
+            flex-shrink: 0;
+        }
+        .brand { font-size: 1.5rem; font-weight: 700; letter-spacing: 2px; padding: 0 20px 20px; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        .nav-link { padding: 15px 20px; color: #ccc; text-decoration: none; font-weight: 500; transition: 0.2s; cursor: pointer; display: block;}
+        .nav-link:hover, .nav-link.active { background: #222; color: white; border-left: 4px solid var(--accent); }
+        .external-link { color: #4CAF50; border-left: 4px solid transparent; }
+        .external-link:hover { border-left-color: #4CAF50; }
+        .back-link { margin-top: auto; padding: 15px 20px; color: var(--accent); font-weight: bold; text-decoration: none; transition: 0.2s; }
+        .back-link:hover { color: white; background: #222; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; background: white; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h1 { font-size: 2rem; text-transform: uppercase; }
+        
+        .btn { padding: 10px 20px; background: var(--text-main); color: white; border: none; cursor: pointer; font-weight: 600; text-transform: uppercase; transition: 0.2s; border-radius: 4px;}
+        .btn:hover { background: var(--accent); }
+        .btn-danger { background: #dc3545; padding: 5px 10px; font-size: 0.8rem; }
+        .btn-danger:hover { background: #b02a37; }
+
+        /* View Toggles */
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Table */
+        .table-container { background: white; border: 1px solid var(--border); overflow-x: auto; border-radius: 8px;}
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { background: #f9f9f9; font-size: 0.85rem; text-transform: uppercase; color: #666; }
+        .prod-img { width: 50px; height: 60px; object-fit: cover; background: #eee; border-radius: 4px;}
+        
+        input[type="number"], input[type="text"], select { padding: 8px; font-family: inherit; border: 1px solid #ccc; border-radius: 4px;}
+        
+        /* Grid for table size inputs */
+        .table-size-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; max-width: 300px;
+        }
+        .table-size-grid div { display: flex; flex-direction: column; align-items: center; }
+        .table-size-grid label { font-size: 0.7rem; font-weight: 700; color: #555; }
+        .table-size-grid input { width: 100%; text-align: center; padding: 4px; font-size: 0.85rem; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; padding: 30px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; border-radius: 8px;}
+        .close-btn { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; cursor: pointer; background: none; border: none; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+        .form-group input[type="text"], .form-group input[type="number"], .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border); font-family: inherit; border-radius: 4px;}
+        .preview-img { width: 100px; height: 120px; object-fit: cover; margin-top: 10px; display: none; border: 1px solid #ccc; border-radius: 4px;}
+        
+        .modal-sizes-input { display: flex; gap: 10px; }
+        .modal-sizes-input div { flex: 1; text-align: center; }
+        .modal-sizes-input label { font-size: 0.75rem; color: #666; margin-bottom: 2px;}
+
+        /* Status Badges */
+        .status { padding: 4px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 3px; text-transform: uppercase; display: inline-block;}
+        .status.in-stock { background: #e6f4ea; color: #28a745; }
+        .status.limited { background: #fff3cd; color: #ffc107; }
+        .status.out-of-stock { background: #f8d7da; color: #dc3545; }
+
+        /* =========================================================
+           NEW VISUAL RACK (FOLDED STACKS ON SHELVES)
+        ========================================================= */
+        .warehouse-rack {
+            background: #222; padding: 20px 15px; border-radius: 8px;
+            border: 12px solid #111;
+            box-shadow: inset 0 10px 30px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .rack-compartment {
+            background: #2a2a2a; border-left: 5px solid #1a1a1a; border-right: 5px solid #1a1a1a;
+            border-bottom: 15px solid #444; /* Thick metal shelf */
+            min-height: 280px; position: relative; padding: 40px 15px 10px;
+            display: flex; align-items: flex-end; overflow-x: auto;
+            scrollbar-width: thin; scrollbar-color: var(--accent) #222;
+        }
+
+        /* Industrial Label */
+        .compartment-label {
+            position: absolute; top: 10px; left: 15px; color: #ffc107;
+            font-family: monospace; font-size: 1.1rem; letter-spacing: 2px;
+            background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 4px;
+            border: 1px solid #ffc107; box-shadow: 0 0 5px rgba(255, 193, 7, 0.2); z-index: 10;
+        }
+
+        .shelf-items { display: flex; gap: 20px; width: 100%; align-items: flex-end;}
+
+        /* Stacked Shirt Visuals */
+        .stack-item {
+            min-width: 140px; max-width: 140px;
+            display: flex; flex-direction: column;
+            margin-bottom: -5px; /* Sink slightly into the shelf */
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .stack-item:hover { transform: translateY(-5px); z-index: 5; }
+
+        /* The Top Display Image */
+        .stack-display-face {
+            background: #fff; padding: 5px; border: 1px solid #ddd;
+            border-radius: 6px 6px 0 0; position: relative; z-index: 2;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+        .stack-display-face img {
+            width: 100%; height: 110px; object-fit: cover; border-radius: 3px;
+        }
+        .stack-name {
+            font-size: 0.75rem; font-weight: 700; color: #333; text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-top: 5px; text-transform: uppercase;
+        }
+
+        /* The Folded Size Layers underneath */
+        .stack-layers {
+            display: flex; flex-direction: column;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.4);
+            border-radius: 0 0 6px 6px;
+        }
+        .stack-layer {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #eef2f5; border: 1px solid #ccc; border-top: none;
+            padding: 4px 8px; box-shadow: inset 0 -3px 6px rgba(0,0,0,0.05); /* Gives a fabric fold depth */
+        }
+        .stack-layer:last-child { border-radius: 0 0 6px 6px; border-bottom: 2px solid #bbb; padding-bottom: 6px;}
+        .stack-layer:nth-child(even) { background: #e5e9ec; } /* alternating subtle stripe for stacked look */
+
+        .layer-sz { font-size: 0.7rem; font-weight: 800; color: var(--text-main); width: 30px; }
+        .layer-input { 
+            width: 50px; text-align: center; padding: 2px; font-size: 0.8rem; 
+            border: 1px solid #bbb; border-radius: 3px; font-weight: bold; background: white;
+        }
+
+        /* Total Stock Badge overlay */
+        .stack-total-badge {
+            position: absolute; top: -10px; right: -10px;
+            background: var(--text-main); color: white; border-radius: 50%;
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: bold; z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white;
+        }
+
+        /* Out of Stock visual */
+        .stack-item.no-stock .stack-display-face img { filter: grayscale(100%); opacity: 0.6; }
+        .stack-item.no-stock .stack-total-badge { background: #dc3545; }
+
+        /* =========================================================
+           CATEGORIES VIEW
+        ========================================================= */
+        .category-card {
+            background: white; border: 1px solid var(--border); padding: 15px 20px;
+            border-radius: 6px; display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .category-card span { font-weight: 600; font-size: 1.1rem;}
+
+        /* =========================================================
+           SHIPPING LABEL GENERATOR VIEW
+        ========================================================= */
+        .shipping-layout { display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;}
+        .shipping-form-area { flex: 1; min-width: 350px; background: white; padding: 25px; border-radius: 8px; border: 1px solid var(--border);}
+        .shipping-preview-area { flex: 1; min-width: 350px; display: flex; flex-direction: column; align-items: center; }
+        
+        .label-card {
+            width: 400px;
+            background: white;
+            border: 2px solid #000;
+            padding: 20px;
+            color: #000;
+            font-family: 'Arial', sans-serif;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .label-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 15px; }
+        .label-logo { width: 100px; height: auto; object-fit: contain; filter: grayscale(100%);}
+        .label-order-info { text-align: right; font-size: 0.8rem; }
+        .label-order-info h2 { margin: 0 0 5px 0; font-size: 1.2rem; text-transform: uppercase; }
+
+        .label-section { margin-bottom: 15px; }
+        .label-title { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; color: #555; }
+        .label-text { font-size: 0.95rem; line-height: 1.4; margin: 0; font-weight: bold;}
+        .label-text.normal { font-weight: normal; }
+
+        .label-divider { border-bottom: 2px dashed #ccc; margin: 15px 0; }
+
+        .barcode-container { width: 100%; height: 60px; margin: 15px 0; display: flex; flex-direction: column; align-items: center; }
+        .barcode-bars { width: 100%; height: 40px; background-image: repeating-linear-gradient(to right, #000 0, #000 4px, transparent 4px, transparent 8px, #000 8px, #000 10px, transparent 10px, transparent 14px, #000 14px, #000 20px, transparent 20px, transparent 22px); }
+        .barcode-num { font-family: monospace; font-size: 0.85rem; letter-spacing: 5px; margin-top: 5px; }
+
+        .payment-mode-box {
+            border: 3px solid #000; padding: 10px; text-align: center; text-transform: uppercase;
+        }
+        .payment-mode-box h1 { margin: 0; font-size: 2rem; letter-spacing: 2px; }
+        .payment-mode-box p { margin: 5px 0 0 0; font-size: 1.2rem; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <!-- PASSWORD OVERLAY -->
+    <div id="admin-login-overlay">
+        <div class="login-box">
+            <h2 style="margin-bottom: 5px; letter-spacing: 2px; text-transform: uppercase;">AVEVIBE</h2>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 25px;">Authorized Personnel Only</p>
+            <input type="password" id="admin-pass" placeholder="Enter Admin Password">
+            <button onclick="checkAdminPassword()">ACCESS DASHBOARD</button>
+            <p id="login-error" style="color: #ff4444; margin-top: 15px; font-size: 0.85rem; display: none;">Access Denied. Incorrect Password.</p>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="brand">AVEVIBE ADMIN</div>
+        <a class="nav-link active" id="tab-inventory" onclick="switchView('inventory')">Data Table</a>
+        <a class="nav-link" id="tab-rack" onclick="switchView('rack')">Visual Rack (Stacked)</a>
+        <a class="nav-link" id="tab-categories" onclick="switchView('categories')">Categories Manager</a>
+        <a class="nav-link" id="tab-shipping" onclick="switchView('shipping')">Shipping Labels</a>
+        
+        <div style="margin-top: 30px; padding: 0 20px; font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">External Tools</div>
+        <!-- Link to the Taxfolio App -->
+        <a href="https://taxfolio.netlify.app" target="_blank" class="nav-link external-link">Generate Invoices ↗</a>
+        
+        <!-- Connected to your live Netlify frontend -->
+        <a href="https://avevibe.netlify.app" class="back-link">← Back to Store</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header-area">
+            <h1 id="page-title">Product Inventory</h1>
+            <button class="btn" id="header-add-btn" onclick="openAddModal()">+ Add New Product</button>
+        </div>
+
+        <!-- VIEW 1: DATA TABLE -->
+        <div id="view-inventory" class="view-section active">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price (₹)</th>
+                            <th>Size Inventory (Qty)</th>
+                            <th>Total & Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-body">
+                        <!-- Products injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VIEW 2: VISUAL RACK (7 Compartments with stacked shirts) -->
+        <div id="view-rack" class="view-section">
+            <div id="rack-container">
+                <!-- Racks injected via JS -->
+            </div>
+        </div>
+
+        <!-- VIEW 3: CATEGORIES MANAGER -->
+        <div id="view-categories" class="view-section">
+            <div style="background: white; border: 1px solid var(--border); padding: 30px; border-radius: 8px;">
+                <h3 style="margin-bottom: 15px; text-transform: uppercase;">Add New Category</h3>
+                <div style="display: flex; gap: 15px; margin-bottom: 40px;">
+                    <input type="text" id="new-cat-input" placeholder="e.g., Winter Wear, Caps, Anime Shorts" style="flex: 1; max-width: 400px; padding: 12px; font-size: 1rem;">
+                    <button class="btn" onclick="addCategory()">Add Category</button>
+                </div>
+
+                <h3 style="margin-bottom: 15px; text-transform: uppercase;">Current Categories</h3>
+                <div id="categories-list-container" style="max-width: 600px;">
+                    <!-- Categories injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: SHIPPING LABEL GENERATOR -->
+        <div id="view-shipping" class="view-section">
+            <div class="shipping-layout">
+                <!-- Data Entry Form -->
+                <div class="shipping-form-area">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">Order Details</h3>
+                        <div class="form-group" style="margin: 0;">
+                            <select id="s-pending-orders" onchange="autoFillOrder()" style="padding: 5px; font-size: 0.85rem; border-color: var(--accent); background: #fff5f2;">
+                                <option value="">-- Manual Entry --</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Order ID</label>
+                            <input type="text" id="s-order-id" oninput="updateLabel()">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Date</label>
+                            <input type="text" id="s-date" oninput="updateLabel()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Customer Name</label>
+                        <input type="text" id="s-name" placeholder="John Doe" oninput="updateLabel()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="s-address1" placeholder="Flat / House No / Street" oninput="updateLabel()">
+                        <input type="text" id="s-address2" placeholder="Locality / Area" style="margin-top: 5px;" oninput="updateLabel()">
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 2;">
+                            <label>City & State</label>
+                            <input type="text" id="s-city" placeholder="Mumbai, MH" oninput="updateLabel()">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Pincode</label>
+                            <input type="text" id="s-pin" placeholder="400001" oninput="updateLabel()">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Phone Number</label>
+                            <input type="text" id="s-phone" placeholder="+91 9999999999" oninput="updateLabel()">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Weight (kg)</label>
+                            <input type="text" id="s-weight" placeholder="0.5" oninput="updateLabel()">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Payment Mode</label>
+                            <select id="s-paymode" onchange="updateLabel()">
+                                <option value="PREPAID">PREPAID</option>
+                                <option value="COD">CASH ON DELIVERY</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Collect Amount (₹)</label>
+                            <input type="number" id="s-amount" placeholder="0" oninput="updateLabel()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Package Contents (For Packer)</label>
+                        <input type="text" id="s-contents" placeholder="e.g. 1x AVEVIBE Classic Tee - Size L" oninput="updateLabel()">
+                    </div>
+                </div>
+
+                <!-- Visual Label Preview -->
+                <div class="shipping-preview-area">
+                    <div style="margin-bottom: 15px; font-weight: bold; color: #666; text-transform: uppercase;">Live Label Preview</div>
+                    
+                    <div class="label-card" id="label-print-area">
+                        <div class="label-header">
+                            <img src="avevibelogo.png" alt="AVEVIBE" class="label-logo" onerror="this.style.display='none'">
+                            <div class="label-order-info">
+                                <h2 id="lbl-order">#AVE-1001</h2>
+                                <div id="lbl-date">05/03/2026</div>
+                                <div style="margin-top: 5px;">Wgt: <span id="lbl-weight">0.5</span> kg</div>
+                            </div>
+                        </div>
+
+                        <div class="label-section">
+                            <div class="label-title">Ship To:</div>
+                            <p class="label-text" id="lbl-name" style="font-size: 1.1rem; margin-bottom: 5px;">Customer Name</p>
+                            <p class="label-text normal" id="lbl-address1">Street Address Line 1</p>
+                            <p class="label-text normal" id="lbl-address2">Locality Area</p>
+                            <p class="label-text normal"><span id="lbl-city">City, State</span> - <span id="lbl-pin" style="font-weight: bold;">000000</span></p>
+                            <p class="label-text normal" style="margin-top: 5px;">Ph: <span id="lbl-phone">----------</span></p>
+                        </div>
+
+                        <div class="label-divider"></div>
+
+                        <div class="label-section">
+                            <div class="label-title">Contents:</div>
+                            <p class="label-text normal" id="lbl-contents" style="font-size: 0.9rem;">1x Item Description - Size</p>
+                        </div>
+
+                        <div class="label-divider"></div>
+
+                        <div class="label-section">
+                            <div class="label-title">Shipped From:</div>
+                            <p class="label-text" style="font-size: 0.85rem;">AVEVIBE HQ</p>
+                            <p class="label-text normal" style="font-size: 0.85rem;">Ahilyanagar, Maharashtra 414003</p>
+                        </div>
+
+                        <div class="barcode-container">
+                            <div class="barcode-bars"></div>
+                            <div class="barcode-num" id="lbl-barcode">AVE100105032026</div>
+                        </div>
+
+                        <div class="payment-mode-box">
+                            <h1 id="lbl-paymode">PREPAID</h1>
+                            <p id="lbl-amount" style="display: none;">Collect: ₹1499</p>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-accent" style="width: 400px; margin-top: 20px; padding: 15px; font-size: 1.1rem;" onclick="printShippingLabel()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" style="vertical-align: middle; margin-right: 5px; margin-top: -2px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        Print Label (PDF)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div class="modal-overlay" id="product-modal">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <h2 style="margin-bottom: 20px; text-transform: uppercase;">Add Product</h2>
+            <form id="product-form" onsubmit="saveProduct(event)">
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="p-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <!-- Dynamically populated now -->
+                    <select id="p-cat" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Price (₹)</label>
+                    <input type="number" id="p-price" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label>Initial Stock (Per Size)</label>
+                    <div class="modal-sizes-input">
+                        <div><label>S</label><input type="number" id="p-s" value="5" min="0"></div>
+                        <div><label>M</label><input type="number" id="p-m" value="5" min="0"></div>
+                        <div><label>L</label><input type="number" id="p-l" value="5" min="0"></div>
+                        <div><label>XL</label><input type="number" id="p-xl" value="5" min="0"></div>
+                        <div><label>XXL</label><input type="number" id="p-xxl" value="5" min="0"></div>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">
+                    *Status (Limited, Out of Stock) is calculated automatically based on total quantity.
+                </p>
+                <div class="form-group">
+                    <label>Product Image (Upload)</label>
+                    <input type="file" id="p-image-file" accept="image/*" onchange="previewImage(event)">
+                    <img id="p-preview" class="preview-img" src="">
+                    <input type="hidden" id="p-image-base64">
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Save Product</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- Password Logic ---
+        function checkAdminPassword() {
+            const passInput = document.getElementById('admin-pass');
+            // Added .trim() to ensure trailing spaces don't cause accidental lockouts
+            const pass = passInput.value.trim();
+            
+            if(pass === 'india@11') {
+                const overlay = document.getElementById('admin-login-overlay');
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300);
+                
+                // Wrap in try-catch in case browser privacy settings block sessionStorage
+                try {
+                    sessionStorage.setItem('avevibe_admin_auth', 'true');
+                } catch(e) {
+                    console.warn("Session storage is blocked by browser settings, but access granted for this session.");
+                }
+            } else {
+                const errText = document.getElementById('login-error');
+                errText.style.display = 'block';
+                passInput.value = ''; // clear the wrong password
+                passInput.focus();
+            }
+        }
+
+        // Press Enter to login
+        document.getElementById('admin-pass').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkAdminPassword();
+        });
+
+        // Initialize password check safely
+        let isAuth = false;
+        try {
+            isAuth = sessionStorage.getItem('avevibe_admin_auth') === 'true';
+        } catch(e) {
+            console.warn("Session storage restricted.");
+        }
+        
+        if(!isAuth) {
+            document.getElementById('admin-login-overlay').style.display = 'flex';
+            document.getElementById('admin-login-overlay').style.opacity = '1';
+        } else {
+            document.getElementById('admin-login-overlay').style.display = 'none';
+        }
+
+        // --- Rest of Admin Logic ---
+        let products = [];
+        let appCategories = [];
+        
+        const storageKey = 'avevibe_products_v2';
+        const catStorageKey = 'avevibe_categories';
+        
+        const defaultCategories = ["Jerseys", "Street Wear", "Gym Wear", "Premium Tees"];
+        const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+        // --- Core Boot & Migration ---
+        function initAdmin() {
+            // Load Categories safely
+            try {
+                const savedCats = localStorage.getItem(catStorageKey);
+                if(savedCats) {
+                    appCategories = JSON.parse(savedCats);
+                } else {
+                    appCategories = [...defaultCategories];
+                    localStorage.setItem(catStorageKey, JSON.stringify(appCategories));
+                }
+            } catch(e) {
+                console.error("Categories parse error", e);
+                appCategories = [...defaultCategories];
+            }
+
+            // Load Products safely
+            try {
+                const saved = localStorage.getItem(storageKey);
+                if(saved) {
+                    products = JSON.parse(saved);
+                }
+            } catch(e) {
+                console.error("Products parse error", e);
+                products = []; // Prevent fatal crash if memory is corrupted
+            }
+
+            // MIGRATION: Convert old single-number stock/status to the new Size Object
+            let needsSave = false;
+            products.forEach(p => {
+                if (!p.stock || typeof p.stock !== 'object') {
+                    needsSave = true;
+                    let qty = typeof p.stockQuantity !== 'undefined' ? p.stockQuantity : 10;
+                    let base = Math.floor(qty / 5);
+                    let rem = qty % 5;
+                    p.stock = { S: base, M: base, L: base + rem, XL: base, XXL: base };
+                }
+                
+                // Also ensure category still exists, if not, create it
+                if (p.category && !appCategories.includes(p.category)) {
+                    appCategories.push(p.category);
+                    try { localStorage.setItem(catStorageKey, JSON.stringify(appCategories)); } catch(e){}
+                }
+
+                p.status = calculateStatus(getTotalStock(p.stock));
+            });
+
+            if (needsSave) saveToStorage();
+
+            // Render Everything safely
+            populateCategoryDropdown();
+            renderTable();
+            renderRack();
+            renderCategoriesManager();
+            initShippingForm();
+        }
+
+        // Helper: Sum up the sizes
+        function getTotalStock(stockObj) {
+            if(!stockObj) return 0;
+            return Object.values(stockObj).reduce((sum, val) => sum + parseInt(val || 0), 0);
+        }
+
+        // Helper: Calculate text status strictly from numbers
+        function calculateStatus(totalQty) {
+            if (totalQty <= 0) return "Out of Stock";
+            if (totalQty <= 5) return "Limited";
+            return "In Stock";
+        }
+
+        // --- View Navigation ---
+        function switchView(viewName) {
+            // Clear actives
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            // Set actives
+            document.getElementById('tab-' + viewName).classList.add('active');
+            document.getElementById('view-' + viewName).classList.add('active');
+
+            const titleMap = {
+                'inventory': 'Product Inventory',
+                'rack': '7-Compartment Visual Rack',
+                'categories': 'Category Management',
+                'shipping': 'Shipping Label Generator'
+            };
+            document.getElementById('page-title').innerText = titleMap[viewName];
+
+            // Hide the Add Product button on non-product views
+            document.getElementById('header-add-btn').style.display = (viewName === 'categories' || viewName === 'shipping') ? 'none' : 'block';
+        }
+
+        // --- Data Updates (Products) ---
+        function updateSizeStock(id, size, newQty) {
+            const p = products.find(prod => prod.id === id);
+            if(p && p.stock) {
+                let qty = parseInt(newQty);
+                if (isNaN(qty) || qty < 0) qty = 0;
+                
+                p.stock[size] = qty;
+                
+                // Recalculate total and status
+                let total = getTotalStock(p.stock);
+                p.status = calculateStatus(total);
+                
+                saveToStorage();
+                renderTable(); 
+                renderRack();  
+            }
+        }
+
+        function deleteProduct(id) {
+            if(confirm("Are you sure you want to pull this vibe off the shelf forever?")) {
+                products = products.filter(p => p.id !== id);
+                saveToStorage();
+                renderTable();
+                renderRack();
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(products));
+            } catch(e) {
+                console.error("Failed to save to local storage", e);
+            }
+        }
+
+        // --- CATEGORIES MANAGEMENT ---
+        function populateCategoryDropdown() {
+            const select = document.getElementById('p-cat');
+            if(!select) return;
+            select.innerHTML = '';
+            appCategories.forEach(cat => {
+                select.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+
+        function renderCategoriesManager() {
+            const container = document.getElementById('categories-list-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            if (appCategories.length === 0) {
+                container.innerHTML = '<p>No categories found.</p>';
+                return;
+            }
+
+            appCategories.forEach(cat => {
+                // Check if any products use this category
+                const inUseCount = products.filter(p => p.category === cat).length;
+                
+                container.innerHTML += `
+                    <div class="category-card">
+                        <span>${cat} <small style="color: #888; font-weight: normal; margin-left: 10px;">(${inUseCount} items)</small></span>
+                        <button class="btn-danger" style="border: none; cursor: pointer; padding: 6px 12px; border-radius: 4px;" onclick="deleteCategory('${cat}')">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        function addCategory() {
+            const input = document.getElementById('new-cat-input');
+            const val = input.value.trim();
+            if(!val) return;
+
+            if (appCategories.some(c => c.toLowerCase() === val.toLowerCase())) {
+                alert("This category already exists.");
+                return;
+            }
+
+            appCategories.push(val);
+            try { localStorage.setItem(catStorageKey, JSON.stringify(appCategories)); } catch(e){}
+            
+            input.value = '';
+            populateCategoryDropdown();
+            renderCategoriesManager();
+            renderRack(); // rack builds dynamically based on appCategories
+        }
+
+        function deleteCategory(catName) {
+            const inUse = products.filter(p => p.category === catName).length > 0;
+            if (inUse) {
+                alert(`Cannot delete "${catName}" because it contains products. Reassign or delete those products first.`);
+                return;
+            }
+
+            if (confirm(`Delete the category "${catName}"?`)) {
+                appCategories = appCategories.filter(c => c !== catName);
+                try { localStorage.setItem(catStorageKey, JSON.stringify(appCategories)); } catch(e){}
+                
+                populateCategoryDropdown();
+                renderCategoriesManager();
+                renderRack();
+            }
+        }
+
+        // --- Rendering View 1: Data Table ---
+        function renderTable() {
+            const tbody = document.getElementById('inventory-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if(products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">No products found. Go to the main store to auto-generate defaults, or add one here.</td></tr>';
+                return;
+            }
+
+            products.forEach(p => {
+                const totalQty = getTotalStock(p.stock);
+                const statusClass = p.status.toLowerCase().replace(/ /g, '-');
+                const safeName = p.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                
+                // Generate size inputs for the table cell
+                let sizeInputsHtml = '<div class="table-size-grid">';
+                sizes.forEach(sz => {
+                    sizeInputsHtml += `
+                        <div>
+                            <label>${sz}</label>
+                            <input type="number" value="${p.stock[sz]}" min="0" onchange="updateSizeStock(${p.id}, '${sz}', this.value)">
+                        </div>
+                    `;
+                });
+                sizeInputsHtml += '</div>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:15px;">
+                                <img src="${p.image}" class="prod-img">
+                                <span style="font-weight: 600;">${safeName}</span>
+                            </div>
+                        </td>
+                        <td>${p.category}</td>
+                        <td>₹${p.price}</td>
+                        <td>${sizeInputsHtml}</td>
+                        <td>
+                            <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">${totalQty}</div>
+                            <span class="status ${statusClass}">${p.status}</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Rendering View 2: Visual Rack (7 Compartments with stacked shirts) ---
+        function renderRack() {
+            const container = document.getElementById('rack-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            // Exactly 7 compartments as requested
+            const TOTAL_COMPARTMENTS = 7;
+            let rackHtml = `<div class="warehouse-rack">`;
+
+            for (let i = 0; i < TOTAL_COMPARTMENTS; i++) {
+                let catName = appCategories[i];
+                let catProducts = [];
+
+                if (catName) {
+                    catProducts = products.filter(p => p.category === catName);
+                } else {
+                    catName = "AVAILABLE";
+                }
+
+                // If this is the 7th compartment and there are more than 7 categories, bundle the rest
+                if (i === 6 && appCategories.length > 7) {
+                    catName = "OVERFLOW / MIXED";
+                    let remainingCats = appCategories.slice(6);
+                    catProducts = products.filter(p => remainingCats.includes(p.category));
+                }
+
+                rackHtml += `
+                    <div class="rack-compartment">
+                        <div class="compartment-label">C-${i + 1} // ${catName.toUpperCase()} <span style="color:#aaa; font-weight:normal;">(${catProducts.length})</span></div>
+                        <div class="shelf-items">
+                `;
+
+                if (catProducts.length === 0 && catName !== "AVAILABLE") {
+                    rackHtml += `<p style="color: #666; font-style: italic; width: 100%; text-align: center; padding-bottom: 20px;">No products in this category</p>`;
+                } else {
+                    catProducts.forEach(p => {
+                        const safeName = p.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                        const totalQty = getTotalStock(p.stock);
+                        
+                        let stockClass = totalQty === 0 ? "no-stock" : "";
+                        
+                        let stackLayersHtml = '<div class="stack-layers">';
+                        sizes.forEach(sz => {
+                            stackLayersHtml += `
+                                <div class="stack-layer">
+                                    <span class="layer-sz">${sz}</span>
+                                    <input type="number" class="layer-input" value="${p.stock[sz]}" min="0" onchange="updateSizeStock(${p.id}, '${sz}', this.value)">
+                                </div>
+                            `;
+                        });
+                        stackLayersHtml += '</div>';
+
+                        rackHtml += `
+                            <div class="stack-item ${stockClass}">
+                                <div class="stack-total-badge">${totalQty}</div>
+                                <div class="stack-display-face">
+                                    <img src="${p.image}" alt="${safeName}">
+                                    <div class="stack-name" title="${safeName}">${p.name}</div>
+                                </div>
+                                ${stackLayersHtml}
+                            </div>
+                        `;
+                    });
+                }
+
+                rackHtml += `</div></div>`; // End shelf-items & rack-compartment
+            }
+
+            rackHtml += `</div>`; // End warehouse-rack
+            container.innerHTML = rackHtml;
+        }
+
+        // --- SHIPPING LABEL LOGIC ---
+        function initShippingForm() {
+            // Load orders placed from storefront safely
+            let pendingOrders = [];
+            try {
+                const savedOrders = localStorage.getItem('avevibe_orders');
+                if(savedOrders) {
+                    pendingOrders = JSON.parse(savedOrders);
+                }
+            } catch(e) {
+                console.error("Orders parse error", e);
+            }
+            
+            // Save globally for autofill
+            window.pendingOrdersData = pendingOrders;
+            
+            const orderSelect = document.getElementById('s-pending-orders');
+            if(!orderSelect) return;
+            orderSelect.innerHTML = '<option value="">-- Manual Entry --</option>';
+            
+            pendingOrders.forEach(o => {
+                orderSelect.innerHTML += `<option value="${o.id}">${o.id} - ${o.name}</option>`;
+            });
+
+            // Auto generate random order ID just in case it's a manual entry
+            const rnd = Math.floor(Math.random() * 9000) + 1000;
+            document.getElementById('s-order-id').value = `AVE-${rnd}`;
+            
+            // Auto date
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            let mm = today.getMonth() + 1;
+            let dd = today.getDate();
+            if (dd < 10) dd = '0' + dd;
+            if (mm < 10) mm = '0' + mm;
+            document.getElementById('s-date').value = dd + '/' + mm + '/' + yyyy;
+            
+            updateLabel();
+        }
+
+        function autoFillOrder() {
+            const selectedId = document.getElementById('s-pending-orders').value;
+            
+            // Reset to defaults if "-- Manual Entry --" selected
+            if(!selectedId) {
+                const rnd = Math.floor(Math.random() * 9000) + 1000;
+                document.getElementById('s-order-id').value = `AVE-${rnd}`;
+                document.getElementById('s-name').value = '';
+                document.getElementById('s-address1').value = '';
+                document.getElementById('s-address2').value = '';
+                document.getElementById('s-city').value = '';
+                document.getElementById('s-pin').value = '';
+                document.getElementById('s-phone').value = '';
+                document.getElementById('s-amount').value = '';
+                document.getElementById('s-contents').value = '';
+                updateLabel();
+                return;
+            }
+            
+            const order = window.pendingOrdersData.find(o => o.id === selectedId);
+            if(order) {
+                document.getElementById('s-order-id').value = order.id;
+                document.getElementById('s-date').value = order.date || '';
+                document.getElementById('s-name').value = order.name || '';
+                document.getElementById('s-address1').value = order.address || '';
+                document.getElementById('s-address2').value = '';
+                document.getElementById('s-city').value = order.city || '';
+                document.getElementById('s-pin').value = order.pin || '';
+                document.getElementById('s-phone').value = order.phone || '';
+                document.getElementById('s-paymode').value = order.paymode || 'PREPAID';
+                document.getElementById('s-amount').value = order.amount || 0;
+                
+                // Formulate contents string
+                let contentsStr = '';
+                if(order.cart && order.cart.length > 0) {
+                    contentsStr = order.cart.map(i => `${i.qty}x ${i.name} (Sz: ${i.size})`).join(', ');
+                }
+                document.getElementById('s-contents').value = contentsStr;
+                
+                updateLabel();
+            }
+        }
+
+        function updateLabel() {
+            // Get Vals
+            const oid = document.getElementById('s-order-id').value || '#AVE-XXXX';
+            const date = document.getElementById('s-date').value || 'XX/XX/XXXX';
+            const name = document.getElementById('s-name').value || 'Customer Name';
+            const add1 = document.getElementById('s-address1').value || 'Street Address Line 1';
+            const add2 = document.getElementById('s-address2').value || '';
+            const city = document.getElementById('s-city').value || 'City, State';
+            const pin = document.getElementById('s-pin').value || '000000';
+            const phone = document.getElementById('s-phone').value || '----------';
+            const wgt = document.getElementById('s-weight').value || '0.5';
+            const paymode = document.getElementById('s-paymode').value;
+            const amt = document.getElementById('s-amount').value || '0';
+            const contents = document.getElementById('s-contents').value || '1x Item Description - Size';
+
+            // Set Vals in UI
+            document.getElementById('lbl-order').innerText = '#' + oid.replace('#','');
+            document.getElementById('lbl-date').innerText = date;
+            document.getElementById('lbl-name').innerText = name.toUpperCase();
+            document.getElementById('lbl-address1').innerText = add1;
+            document.getElementById('lbl-address2').innerText = add2;
+            document.getElementById('lbl-address2').style.display = add2 ? 'block' : 'none';
+            document.getElementById('lbl-city').innerText = city;
+            document.getElementById('lbl-pin').innerText = pin;
+            document.getElementById('lbl-phone').innerText = phone;
+            document.getElementById('lbl-weight').innerText = wgt;
+            document.getElementById('lbl-contents').innerText = contents;
+            
+            // Generate simple visual barcode text representation
+            const cleanOid = oid.replace('#','').replace('-','');
+            const cleanDate = date.replace(/\//g,'');
+            document.getElementById('lbl-barcode').innerText = cleanOid + cleanDate;
+
+            // Handle Payment UI
+            const modeLbl = document.getElementById('lbl-paymode');
+            const amtLbl = document.getElementById('lbl-amount');
+            
+            modeLbl.innerText = paymode;
+            if(paymode === 'COD') {
+                amtLbl.style.display = 'block';
+                amtLbl.innerText = 'Collect: ₹' + amt;
+                modeLbl.style.color = '#dc3545'; // Red alert for COD collection
+            } else {
+                amtLbl.style.display = 'none';
+                modeLbl.style.color = '#000';
+            }
+        }
+
+        function printShippingLabel() {
+            const printContent = document.getElementById('label-print-area').innerHTML;
+            const printWindow = window.open('', '', 'height=800,width=600');
+            
+            // Using separated script tags to prevent parsing errors in strict environments
+            const scriptStart = '<' + 'script>';
+            const scriptEnd = '<' + '/script>';
+
+            // Format specifically for standard 4x6 thermal label printers
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Shipping Label</title>
+                    <style>
+                        body { margin: 0; padding: 0; font-family: Arial, sans-serif; color: #000; background: #fff;}
+                        .label-card { width: 100%; box-sizing: border-box; }
+                        
+                        .label-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+                        .label-logo { width: 100px; height: auto; object-fit: contain; filter: grayscale(100%); }
+                        .label-order-info { text-align: right; font-size: 0.8rem; }
+                        .label-order-info h2 { margin: 0 0 5px 0; font-size: 1.2rem; text-transform: uppercase; }
+
+                        .label-section { margin-bottom: 10px; }
+                        .label-title { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; color: #333;}
+                        .label-text { font-size: 1rem; line-height: 1.3; margin: 0; font-weight: bold;}
+                        .label-text.normal { font-weight: normal; }
+
+                        .label-divider { border-bottom: 2px dashed #999; margin: 10px 0; }
+
+                        .barcode-container { width: 100%; height: 60px; margin: 15px 0; display: flex; flex-direction: column; align-items: center; }
+                        .barcode-bars { width: 100%; height: 40px; background-image: repeating-linear-gradient(to right, #000 0, #000 4px, transparent 4px, transparent 8px, #000 8px, #000 10px, transparent 10px, transparent 14px, #000 14px, #000 20px, transparent 20px, transparent 22px); }
+                        .barcode-num { font-family: monospace; font-size: 0.85rem; letter-spacing: 5px; margin-top: 5px; }
+
+                        .payment-mode-box { border: 3px solid #000; padding: 10px; text-align: center; text-transform: uppercase; margin-top: 15px;}
+                        .payment-mode-box h1 { margin: 0; font-size: 2rem; letter-spacing: 2px; }
+                        .payment-mode-box p { margin: 5px 0 0 0; font-size: 1.2rem; font-weight: bold; }
+
+                        /* Specifically force 4x6 landscape/portrait bounds for thermal printers */
+                        @media print {
+                            @page { size: 4in 6in; margin: 0; }
+                            body { padding: 5mm; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="label-card">
+                        ${printContent}
+                    </div>
+                    ${scriptStart}
+                        setTimeout(() => { window.print(); window.close(); }, 500);
+                    ${scriptEnd}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // --- Product Add Modal ---
+        function openAddModal() {
+            if(appCategories.length === 0) {
+                alert("Please create a category first in the Categories Manager.");
+                switchView('categories');
+                return;
+            }
+            document.getElementById('product-form').reset();
+            document.getElementById('p-preview').style.display = 'none';
+            document.getElementById('p-image-base64').value = '';
+            document.getElementById('product-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('product-modal').classList.remove('active');
+        }
+
+        // Handle Image Upload and Compression
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600; 
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    document.getElementById('p-preview').src = dataUrl;
+                    document.getElementById('p-preview').style.display = 'block';
+                    document.getElementById('p-image-base64').value = dataUrl;
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function saveProduct(e) {
+            e.preventDefault();
+            
+            let base64Img = document.getElementById('p-image-base64').value;
+            
+            // Generate fallback SVG if no image uploaded
+            if(!base64Img) {
+                const bg = "#111111";
+                const nameText = document.getElementById('p-name').value;
+                const shortText = nameText.length > 15 ? nameText.substring(0, 12) + "..." : nameText;
+                base64Img = `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22400%22 style=%22background:%23${bg}%22%3E%3Ctext fill=%22%23ffffff%22 x=%2250%25%22 y=%2250%25%22 font-family=%22sans-serif%22 font-size=%2222%22 font-weight=%22bold%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E${encodeURIComponent(shortText)}%3C/text%3E%3C/svg%3E`;
+            }
+
+            const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+            
+            // Grab specific sizes
+            const newStock = {
+                S: parseInt(document.getElementById('p-s').value) || 0,
+                M: parseInt(document.getElementById('p-m').value) || 0,
+                L: parseInt(document.getElementById('p-l').value) || 0,
+                XL: parseInt(document.getElementById('p-xl').value) || 0,
+                XXL: parseInt(document.getElementById('p-xxl').value) || 0,
+            };
+            
+            const totalStock = getTotalStock(newStock);
+
+            const newProduct = {
+                id: newId,
+                name: document.getElementById('p-name').value,
+                category: document.getElementById('p-cat').value,
+                price: parseInt(document.getElementById('p-price').value),
+                stock: newStock,
+                status: calculateStatus(totalStock), 
+                image: base64Img
+            };
+
+            products.unshift(newProduct);
+            
+            try {
+                saveToStorage();
+                renderTable();
+                renderRack();
+                renderCategoriesManager(); // update the item counts
+                closeModal();
+            } catch(error) {
+                alert("Storage full! Image might be too large for Local Storage.");
+                products.shift(); // revert the push
+            }
+        }
+
+        // Boot
+        initAdmin();
+    </script>
+</body>
+</html>
