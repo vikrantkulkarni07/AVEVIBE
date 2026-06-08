@@ -1015,19 +1015,42 @@
             transform: translateY(0);
         }
 
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 3rem; }
+      @media (max-width: 768px) {
+            /* Better text scaling */
+            .hero h1 { font-size: 2.5rem; letter-spacing: 1px; }
+            .hero p { font-size: 1rem; }
+            
             nav.desktop-nav { display: none; }
-            .search-container { display: none; } /* Hide search on mobile header, maybe put in menu */
+            .search-container { display: none; } /* Hide search on mobile header */
             .hamburger { display: flex; }
+            
             /* Force exact 2-column layout on mobile instead of auto-fill for better fit */
             .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .product-img { height: 160px; }
-            .custom-box { min-width: 100%; }
-            section { padding: 3rem 15px; } /* Slightly tighter padding for mobile */
-            .product-modal { flex-direction: column; }
-            .modal-right { padding: 20px; }
-            .modal-title { font-size: 1.6rem; }
+            .product-img { height: 150px; }
+            
+            /* CRITICAL FIX: Reset fixed min-widths to prevent horizontal cutting off */
+            .custom-box, .modal-left, .modal-right, .contact-form, .contact-info { 
+                min-width: 0 !important; 
+                width: 100%; 
+            }
+            
+            /* Adjust padding to fit smaller screens perfectly */
+            section { padding: 3rem 15px; } 
+            .custom-box { padding: 20px 15px; }
+            
+            /* Fix Modal overflowing screen */
+            .product-modal { flex-direction: column; width: 95%; max-width: 95vw; margin: auto; }
+            .modal-right { padding: 20px 15px; }
+            .modal-left { padding: 20px 15px; border-right: none; border-bottom: 1px solid var(--border); }
+            .modal-title { font-size: 1.5rem; }
+            .modal-left img { max-width: 100%; }
+            
+            /* Stack hero buttons properly */
+            .hero-buttons { flex-direction: column; width: 100%; padding: 0 10px; gap: 10px; }
+            .hero-buttons .btn { width: 100%; margin: 0; }
+
+            /* Prevent sidebar from overflowing screen */
+            .sidebar-panel { width: 85vw; right: -100%; }
         }
     </style>
 </head>
